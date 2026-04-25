@@ -1,6 +1,9 @@
 torch
 pytorch-ignite
-transformers==2.5.1
-tensorboardX==1.8
-tensorflow  # for tensorboardX
+transformers>=4.30.0
+tensorboardX
+tensorflow
 spacy<3.0
+sentence-transformers
+scikit-learn
+numpy
