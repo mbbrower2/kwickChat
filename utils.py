@@ -8,7 +8,10 @@ import socket
 import torch
 import numpy as np
 
-from transformers import cached_path
+try:
+    from transformers import cached_path
+except ImportError:
+    from transformers.file_utils import cached_path
 from itertools import chain
 
 from sklearn.feature_extraction.text import CountVectorizer
