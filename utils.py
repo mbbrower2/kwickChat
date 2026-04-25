@@ -28,7 +28,7 @@ PADDED_INPUTS = ["input_ids", "lm_labels", "token_type_ids"]
 
 logger = logging.getLogger(__file__)
 
-model = SentenceTransformer('sentence-transformers/distilbert-base-nli-mean-tokens')
+model = SentenceTransformer('distilbert-base-nli-mean-tokens')
 
 def download_pretrained_model():
     """ Download and extract finetuned model from S3 """
