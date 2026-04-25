@@ -7,11 +7,7 @@ import tempfile
 import socket
 import torch
 import numpy as np
-
-try:
-    from transformers import cached_path
-except ImportError:
-    from transformers.file_utils import cached_path
+import requests
 from itertools import chain
 
 from sklearn.feature_extraction.text import CountVectorizer
@@ -33,6 +29,18 @@ logger = logging.getLogger(__file__)
 
 model = SentenceTransformer('distilbert-base-nli-mean-tokens')
 
+def download_file(url, dest=None):
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
+    ext = os.path.splitext(url)[1]
+    fd, temp_path = tempfile.mkstemp(suffix=ext)
+    with os.fdopen(fd, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            f.write(chunk)
+    return temp_path
+
+cached_path = download_file
+
 def download_pretrained_model():
     """ Download and extract finetuned model from S3 """
     resolved_archive_file = cached_path(HF_FINETUNED_MODEL)
@@ -44,7 +52,6 @@ def download_pretrained_model():
 
 
 
-
 class AttrDict(dict):
     def __init__(self, *args, **kwargs):
         super(AttrDict, self).__init__(*args, **kwargs)
@@ -53,7 +60,6 @@ class AttrDict(dict):
 
 def make_logdir(model_name: str):
     """Create unique path to save results and checkpoints, e.g. runs/Sep22_19-45-59_gpu-7_gpt2"""
-    # Code copied from ignite repo
     current_time = datetime.now().strftime('%b%d_%H-%M-%S')
     logdir = os.path.join(
         'runs', current_time + '_' + socket.gethostname() + '_' + model_name)
@@ -62,16 +68,16 @@ def make_logdir(model_name: str):
 def add_special_tokens_(model, tokenizer):
     """ Add special tokens to the tokenizer and the model if they have not already been added. """
     orig_num_tokens = len(tokenizer.encoder)
-    num_added_tokens = tokenizer.add_special_tokens(ATTR_TO_SPECIAL_TOKEN) # doesn't add if they are already there
+    num_added_tokens = tokenizer.add_special_tokens(ATTR_TO_SPECIAL_TOKEN)
     if num_added_tokens > 0:
         model.resize_token_embeddings(new_num_tokens=orig_num_tokens + num_added_tokens)
-def build_input_from_segments(persona, history, reply, tokenizer,keyphrase, lm_labels=False, with_eos=True):
+
+def build_input_from_segments(persona, history, reply, tokenizer, keyphrase, lm_labels=False, with_eos=True):
     """ Build a sequence of input from 3 segments: persona, history and last reply. """
     bos, eos, speaker1, speaker2, key = tokenizer.convert_tokens_to_ids(SPECIAL_TOKENS[:-1])
     sequence = [[bos] + list(chain(*persona))] + history + keyphrase + [reply + ([eos] if with_eos else [])]
     sequence = [sequence[0]] + [[speaker2 if (len(sequence[:-1])-i) % 2 else speaker1] +
                                 s for i, s in enumerate(sequence[1:-2])] + [[key]+sequence[-2]]+[[speaker1]+sequence[-1]]
-    # print(sequence)
     instance = {}
     instance["input_ids"] = list(chain(*sequence))
     instance["token_type_ids"] = [speaker2 if i % 2 else speaker1 for i, s in enumerate(sequence) for _ in s]
@@ -80,12 +86,11 @@ def build_input_from_segments(persona, history, reply, tokenizer,keyphrase, lm_l
     if lm_labels:
         instance["lm_labels"] = ([-100] * sum(len(s) for s in sequence[:-1])) + [-100] + sequence[-1][1:]
     return instance
-# def keyphrase_extraction(history):
 
 def get_dataset(tokenizer, dataset_path, dataset_cache):
     """ Get tokenized PERSONACHAT dataset from S3 or cache."""
     dataset_path = dataset_path or PERSONACHAT_URL
-    dataset_cache = dataset_cache + '_' + type(tokenizer).__name__  # To avoid using GPT cache for GPT-2 and vice-versa
+    dataset_cache = dataset_cache + '_' + type(tokenizer).__name__
     if dataset_cache and os.path.isfile(dataset_cache):
         logger.info("Load tokenized dataset from cache at %s", dataset_cache)
         dataset = torch.load(dataset_cache)
@@ -117,16 +122,14 @@ def add_keyphrase(personachat):
             for j, utterance in enumerate(dialog['utterances']):
                 if j > 3:
                     break
-                # for k, history in enumerate(utterance['candidate']):
                 reply = utterance['candidates'][-1]
-                # print(reply)
                 try:
                     number_words = len(reply.split(' '))
                 except ValueError:
                     number_words = 1
 
                 try:
-                    keyphrase = keyphrase_extract(reply, model,number_words)
+                    keyphrase = keyphrase_extract(reply, model, number_words)
                 except ValueError:
                     keyphrase = reply.split(' ')[:number_words]
 
@@ -136,8 +139,6 @@ def add_keyphrase(personachat):
 def keyphrase_extract(doc, model, number_words=3):
     n_gram_range = (1, number_words)
     stop_words = "english"
-    # logger.info("Adding one key phrases......")
-    # Extract candidate words/phrases
     count = CountVectorizer(ngram_range=n_gram_range, stop_words=stop_words).fit([doc])
     candidates = count.get_feature_names()
 
