@@ -115,11 +115,7 @@ def get_dataset(tokenizer, dataset_path, dataset_cache):
 def add_keyphrase(personachat):
     for dataset_name, dataset in personachat.items():
         for i, dialog in enumerate(dataset):
-            if i > 40:
-                break
             for j, utterance in enumerate(dialog['utterances']):
-                if j > 3:
-                    break
                 reply = utterance['candidates'][-1]
                 try:
                     number_words = len(reply.split(' '))
