@@ -169,7 +169,7 @@ def train():
     model.to(args.device)
     # Add special tokens if they are not already added
     add_special_tokens_(model, tokenizer)
-    optimizer = AdamW(model.parameters(), lr=args.lr, correct_bias=True)
+    optimizer = AdamW(model.parameters(), lr=args.lr)
 
     # Prepare model for FP16 and distributed training if needed (order is important, distributed should be the last)
     if args.fp16:
