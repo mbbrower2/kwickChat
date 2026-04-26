@@ -134,7 +134,7 @@ def keyphrase_extract(doc, model, number_words=3):
     n_gram_range = (1, number_words)
     stop_words = "english"
     count = CountVectorizer(ngram_range=n_gram_range, stop_words=stop_words).fit([doc])
-    candidates = count.get_feature_names()
+    candidates = count.get_feature_names_out()
 
     doc_embedding = model.encode([doc])
     candidate_embeddings = model.encode(candidates)
