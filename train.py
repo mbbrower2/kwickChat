@@ -185,10 +185,11 @@ def train():
         model.train()
         batch = tuple(input_tensor.to(args.device) for input_tensor in batch)
         input_ids, mc_token_ids, lm_labels, mc_labels, token_type_ids = batch
-        (lm_loss), (mc_loss), *_ = model(
+        output = model(
             input_ids, token_type_ids=token_type_ids, mc_token_ids=mc_token_ids,
             mc_labels=mc_labels, labels=lm_labels
         )
+        lm_loss, mc_loss = output.loss, output.mc_loss
         loss = (lm_loss * args.lm_coef + mc_loss * args.mc_coef) / args.gradient_accumulation_steps
         if args.fp16:
             with amp.scale_loss(loss, optimizer) as scaled_loss:
