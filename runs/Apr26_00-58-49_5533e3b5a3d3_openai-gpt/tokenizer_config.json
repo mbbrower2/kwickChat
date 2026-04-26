@@ -1,0 +1,6 @@
+{
+  "clean_up_tokenization_spaces": true,
+  "model_max_length": 512,
+  "tokenizer_class": "OpenAIGPTTokenizer",
+  "unk_token": "<unk>"
+}

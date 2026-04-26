@@ -1,0 +1,11 @@
+{
+  "additional_special_tokens": [
+    "<speaker1>",
+    "<speaker2>",
+    "<key>"
+  ],
+  "bos_token": "<bos>",
+  "eos_token": "<eos>",
+  "pad_token": "<pad>",
+  "unk_token": "<unk>"
+}
