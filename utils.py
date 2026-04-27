@@ -67,7 +67,10 @@ def make_logdir(model_name: str):
 
 def add_special_tokens_(model, tokenizer):
     """ Add special tokens to the tokenizer and the model if they have not already been added. """
-    orig_num_tokens = len(tokenizer.encoder)
+    try:
+        orig_num_tokens = len(tokenizer.encoder)
+    except AttributeError:
+        orig_num_tokens = len(tokenizer)
     num_added_tokens = tokenizer.add_special_tokens(ATTR_TO_SPECIAL_TOKEN)
     if num_added_tokens > 0:
         model.resize_token_embeddings(new_num_tokens=orig_num_tokens + num_added_tokens)
