@@ -96,7 +96,7 @@ def get_dataset(tokenizer, dataset_path, dataset_cache):
     dataset_cache = dataset_cache + '_' + type(tokenizer).__name__
     if dataset_cache and os.path.isfile(dataset_cache):
         logger.info("Load tokenized dataset from cache at %s", dataset_cache)
-        dataset = torch.load(dataset_cache)
+        dataset = torch.load(dataset_cache, weights_only=False)
     else:
         logger.info("Download dataset from %s", dataset_path)
         personachat_file = cached_path(dataset_path)
