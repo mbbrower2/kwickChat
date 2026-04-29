@@ -76,7 +76,7 @@ def run():
     parser.add_argument("--model_checkpoint", type=str,
                         default="openai-gpt/Aug08_11-34-29_b765d32f222d_openai-gpt")
     parser.add_argument("--max_history", type=int, default=2)
-    parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--no_sample", action='store_true')
     parser.add_argument("--max_length", type=int, default=20)
     parser.add_argument("--min_length", type=int, default=1)
