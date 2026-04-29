@@ -213,9 +213,11 @@ def train():
             input_ids, mc_token_ids, lm_labels, mc_labels, token_type_ids = batch
             logger.info(tokenizer.decode(input_ids[0, -1, :].tolist()))
             # if we dont send labels to model, it doesnt return losses
-            lm_logits, mc_logits, *_ = model(
+            outputs = model(
                 input_ids, token_type_ids=token_type_ids, mc_token_ids=mc_token_ids,
             )
+            lm_logits = outputs.logits if hasattr(outputs, 'logits') else outputs[0]
+            mc_logits = outputs.mc_logits if hasattr(outputs, 'mc_logits') else outputs[1]
             lm_logits_flat_shifted = lm_logits[..., :-1, :].contiguous().view(-1, lm_logits.size(-1))
             lm_labels_flat_shifted = lm_labels[..., 1:].contiguous().view(-1)
             return (lm_logits_flat_shifted, mc_logits), (lm_labels_flat_shifted, mc_labels)
